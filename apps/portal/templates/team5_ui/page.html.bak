@@ -1,0 +1,1058 @@
+
+
+{% extends 'team5_ui/base.html' %}
+{% load static %}
+
+{% block content %}
+
+{% if section == 'rewards' %}
+
+<section class="dark-panel" style="max-width:950px;margin:0 auto">
+    <div class="eyebrow">LABORATORIO TÉCNICO · REWARDS</div>
+    <h1>🎁 Cámara de recompensas</h1>
+
+    <p>
+        Explora el laboratorio técnico persistente de Ecomotor,
+        donde se realizan pruebas aisladas de progresión y
+        recompensas con personajes y datos ficticios.
+    </p>
+
+    <p>
+        <strong>Estado de HINT:</strong>
+        la entrega de objetos HINT mediante Rewards y su
+        comprobación en <code>ItemGrant</code> todavía no están
+        validadas con el seed limpio del laboratorio persistente.
+        Por tanto, este recorrido no se presenta como una
+        funcionalidad demostrable en esta versión.
+    </p>
+
+    <p>
+        <strong>Importante:</strong>
+        este laboratorio utiliza una partida, sesión y base de datos
+        distintas de tu Ducky de DuckyArena.
+        Su progreso y sus recompensas no se incorporan al inventario
+        ni al saldo de esta interfaz.
+    </p>
+
+    <div class="parchment" style="padding:24px;margin:24px 0">
+        <h2>Acceder al laboratorio de Jaime</h2>
+        <p>
+            Inicia el laboratorio persistente de Ecomotor
+            en el puerto 8002 utilizando su configuración
+            específica. Después, abre su interfaz:
+        </p>
+        <a class="btn gold" href="{{ rewards_lab_url }}" target="_blank" rel="noopener noreferrer">
+            Abrir laboratorio de Rewards ↗
+        </a>
+    </div>
+
+    <h2>Qué se puede comprobar</h2>
+
+    <ol>
+        <li>
+            Iniciar un personaje ficticio en el laboratorio
+            persistente de Ecomotor.
+        </li>
+        <li>
+            Explorar las pruebas de progresión y XP disponibles
+            en esa demostración.
+        </li>
+        <li>
+            Comprobar la persistencia del progreso utilizando
+            las funcionalidades habilitadas en el laboratorio.
+        </li>
+        <li>
+            Consultar las limitaciones de la demostración,
+            que utiliza datos y reglas sintéticas.
+        </li>
+    </ol>
+
+    <p>
+        <strong>Validación pendiente:</strong>
+        el recorrido de recompensas HINT mediante
+        <code>item_challenge</code> y su registro en
+        <code>ItemGrant</code> no está validado con el seed limpio
+        del laboratorio persistente. No debe considerarse
+        una prueba funcional completada.
+    </p>
+
+    <p>
+        <small>
+            Este apartado es un acceso al laboratorio aislado.
+            No fusiona usuarios, partidas, bases de datos ni saldos.
+            Las recompensas del laboratorio no se incorporan
+            a la partida local de DuckyArena.
+        </small>
+    </p>
+</section>
+
+{% elif not ducky %}
+
+<section class="hero welcome">
+    <div class="welcome-art">
+        <img src="{% static 'team5_ui/img/characters/ducky_male.png' %}" alt="Ducky medieval">
+    </div>
+
+    <div class="welcome-card parchment">
+        <div class="eyebrow">TU AVENTURA COMIENZA</div>
+        <h1>Bienvenido a DuckyArena</h1>
+
+        <p>
+            Elige tu personaje para entrar en el mundo
+            de las siete épocas.
+        </p>
+
+        <form action="{% url 'team5_ui:action' %}" method="post">
+            {% csrf_token %}
+
+            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="return_to" value="dashboard">
+
+            <div class="gender-options">
+                <label>
+                    <input type="radio" name="sex" value="male" checked>
+                    🦆 Masculino
+                </label>
+
+                <label>
+                    <input type="radio" name="sex" value="female">
+                    🦆 Femenino
+                </label>
+            </div>
+
+            <button class="btn gold" type="submit">
+                Crear mi Ducky →
+            </button>
+        </form>
+
+        <small>
+            Tu personaje se vincula a tu usuario autenticado.
+        </small>
+    </div>
+</section>
+
+{% else %}
+
+{% if section == 'dashboard' %}
+
+<section class="hero{% if ducky_background %} ducky-scene-hero{% endif %}"{% if ducky_background %} style="--ducky-scene-image: url('{{ ducky_background }}?v=3'); background-image: url('{{ ducky_background }}?v=3') !important; background-size: cover !important; background-position: center 62% !important; background-repeat: no-repeat !important"{% endif %}>
+
+    <div class="hero-character{% if ducky_background %} ducky-scene{% endif %}"{% if ducky_background %} style="--ducky-scene-image: url('{{ ducky_background }}?v=3')"{% endif %}>
+        <img src="{{ ducky_image }}" alt="Tu Ducky">
+    </div>
+
+    <div class="parchment hero-profile">
+        <div class="eyebrow">✦ EL HÉROE DE LA ARENA ✦</div>
+
+        <h1>{{ user.username }}</h1>
+
+        <p>⭐ Nivel {{ profile.current_level|default:1 }}</p>
+
+        <hr>
+
+        <span>Especialización</span>
+
+        <h3>
+            {{ profile.active_specialization_code|default:'Aún sin elegir' }}
+        </h3>
+
+        <div class="progress">
+            <i style="width:{% if next_xp and profile %}{% widthratio profile.historical_xp_total next_xp 100 %}{% else %}100{% endif %}%"></i>
+        </div>
+
+        <p class="small">
+            XP: {{ profile.historical_xp_total|default:0 }}
+            {% if next_xp %}/ {{ next_xp }}{% endif %}
+        </p>
+
+        <a href="{% url 'team5_ui:evolution' %}" class="btn navy">
+            Ver progreso
+        </a>
+    </div>
+
+    <div class="hero-actions">
+
+        <a href="{% url 'team5_ui:wardrobe' %}" class="action-tile">
+            👕
+            <b>Vestuario</b>
+            <small>Personaliza tu pato</small>
+        </a>
+
+        <a href="{% url 'team5_ui:museum' %}" class="action-tile">
+            🏛️
+            <b>Museo</b>
+            <small>Explora las épocas</small>
+        </a>
+
+        <a href="{% url 'shop:catalog' %}" class="action-tile">
+            🛒
+            <b>Tienda</b>
+            <small>Consigue objetos</small>
+        </a>
+
+        <a href="{% url 'team5_ui:arena' %}" class="action-tile">
+            ⚔️
+            <b>Arena</b>
+            <small>Próximos desafíos</small>
+        </a>
+
+    </div>
+
+    <div class="hero-side">
+
+        <div class="dark-panel">
+            <h3>⭐ Tu aventura</h3>
+            <p>🏰 {{ stage.name|default:'Prehistoria' }}</p>
+            <p>🦆 {{ ducky.get_sex_display }}</p>
+            <p>🪙 {{ wallet.available_balance|default:0 }} monedas</p>
+        </div>
+
+        <div class="dark-panel">
+            <h3>🎯 Próximo objetivo</h3>
+            <p>Alcanza el siguiente nivel y descubre nuevas épocas.</p>
+
+            <a class="btn navy" href="{% url 'team5_ui:evolution' %}">
+                Consultar evolución
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="bottom-grid">
+
+    <div class="dark-panel">
+        <h3>✦ Mis estadísticas</h3>
+
+        <div class="stat-grid" aria-label="Estadísticas actuales y puntos por repartir">
+            <div>⚔️ <b>{{ stats.atk|default:0 }}</b><small>Ataque</small></div>
+            <div>🛡️ <b>{{ stats.def_stat|default:0 }}</b><small>Defensa</small></div>
+            <div>🧠 <b>{{ stats.log_stat|default:0 }}</b><small>Lógica</small></div>
+            <div>⚡ <b>{{ stats.vel|default:0 }}</b><small>Velocidad</small></div>
+            <div>🧠 <b>{{ stats.int_stat|default:0 }}</b><small>Inteligencia</small></div>
+            <div>✨ <b>{{ stats.spe|default:0 }}</b><small>Especial</small></div>
+            <div class="stat-points-counter" aria-live="polite">🎯 <b>{{ stats.available_points|default:0 }}</b><small>Puntos disponibles</small></div>
+        </div>
+        {% if stats %}
+        <details class="stat-redistribute">
+            <summary class="btn navy">Redistribuir puntos</summary>
+            <form method="post" action="{% url 'team5_ui:action' %}" id="stat-redistribution-form" data-budget="{{ stat_budget }}" data-specialization="{% if stat_specialization %}1{% else %}0{% endif %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="redistribute_stats">
+                <input type="hidden" name="return_to" value="dashboard">
+                <p>{% if stat_specialization %}Reparte hasta 50 puntos, máximo 12 por estadística.{% else %}Los 45 puntos base no cambian; puedes mover tus 5 puntos libres cuando quieras.{% endif %}</p>
+                <div class="stat-editor-grid">
+                    {% for row in stat_rows %}
+                    <label class="stat-editor-row">
+                        <span>{{ row.icon }} {{ row.label }} <small>{% if not stat_specialization %}Base {{ row.base }}{% else %}Máx. 12{% endif %}</small></span>
+                        <span class="stat-stepper">
+                            <button type="button" data-step="-1" aria-label="Restar punto de {{ row.label }}">−</button>
+                            <input type="number" name="{{ row.key }}" value="{{ row.bonus }}" min="0" max="{% if stat_specialization %}12{% else %}5{% endif %}" required aria-label="Puntos libres de {{ row.label }}">
+                            <button type="button" data-step="1" aria-label="Sumar punto a {{ row.label }}">+</button>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p class="stat-editor-balance" aria-live="polite">Puntos sin repartir: <strong id="stat-editor-remaining">{{ stats.available_points }}</strong> / {{ stat_budget }}</p>
+                <button class="btn navy" type="submit">Guardar distribución</button>
+            </form>
+        </details>
+        <script>
+        (() => {
+            const form = document.getElementById('stat-redistribution-form');
+            if (!form) return;
+            const inputs = [...form.querySelectorAll('input[type="number"]')];
+            const budget = Number(form.dataset.budget);
+            const remaining = document.getElementById('stat-editor-remaining');
+            const submit = form.querySelector('button[type="submit"]');
+            function update() {
+                const numbers = inputs.map(i => Number(i.value));
+                const valid = inputs.every((i, n) => i.value.trim() !== '' && Number.isInteger(numbers[n]) && numbers[n] >= 0 && numbers[n] <= Number(i.max));
+                const left = budget - numbers.reduce((a,b) => a+b,0);
+                remaining.textContent = String(left);
+                submit.disabled = !valid || left < 0;
+                remaining.style.color = left < 0 ? '#ff8585' : '';
+            }
+            form.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-step]');
+                if (!btn) return;
+                const input = btn.parentElement.querySelector('input');
+                input.value = String(Math.max(0, Math.min(Number(input.max), Number(input.value || 0) + Number(btn.dataset.step))));
+                update();
+            });
+            inputs.forEach(i => i.addEventListener('input', update));
+            form.addEventListener('submit', e => { update(); if (submit.disabled) e.preventDefault(); });
+            update();
+        })();
+        </script>
+        {% endif %}
+        {% if specialization_notice %}<p class="specialization-notice" role="status">¡Especialización desbloqueada! Dispones de 50 puntos para distribuir libremente (máximo 12 por estadística). Puedes jugar aunque no los asignes todos.</p>{% endif %}
+    </div>
+
+    <div class="dark-panel">
+        <h3>🎒 Equipamiento actual</h3>
+
+        <div class="equipment-six-grid" aria-label="Seis ranuras de equipamiento">
+            {% for slot in equipment_slots %}
+            <div class="equipment-six-slot {% if not slot.unlocked %}equipment-locked{% elif slot.equipped %}equipment-filled{% else %}equipment-empty{% endif %}">
+                {% if not slot.unlocked %}<span class="equipment-placeholder">🔒</span>
+                {% elif slot.equipped %}
+                    {% if slot.equipped.image_url %}<img src="{{ slot.equipped.image_url }}" alt="{{ slot.equipped.inventory_item.item.name }}" loading="lazy">{% endif %}
+                    <strong>{{ slot.equipped.inventory_item.item.name }}</strong>
+                {% else %}<span class="equipment-placeholder">{% if 'ATTACK' in slot.code %}⚔️{% else %}🛡️{% endif %}</span><strong>Vacía</strong>{% endif %}
+                <small>{{ slot.label }}{% if not slot.unlocked %} · Bloqueada{% endif %}</small>
+            </div>
+            {% endfor %}
+        </div>
+
+        <a class="btn navy" href="{% url 'team5_ui:wardrobe' %}">
+            Editar vestuario
+        </a>
+    </div>
+
+    <div class="dark-panel">
+        <h3>🪙 Ducky Coins</h3>
+
+        <div class="big-num">
+            {{ wallet.available_balance|default:0 }}
+        </div>
+
+        <a class="btn navy" href="{% url 'team5_ui:wallet' %}">
+            Ir al banco
+        </a>
+    </div>
+
+</section>
+
+{% else %}
+
+<div class="page-title">
+    <div>
+        <div class="eyebrow">DUCKYARENA / EQUIPO 5</div>
+        <h1>{{ section_title }}</h1>
+        <p>Explora tu aventura con los servicios reales del proyecto.</p>
+    </div>
+    <div class="page-emblem">♛</div>
+</div>
+
+{% if section == 'player' %}
+
+<section class="content-grid">
+
+    <div class="dark-panel character-panel{% if ducky_background %} ducky-scene{% endif %}"{% if ducky_background %} style="--ducky-scene-image: url('{{ ducky_background }}?v=3')"{% endif %}>
+        <img class="character-large" src="{{ ducky_image }}" alt="Tu Ducky">
+
+        <h2>{{ user.username }}</h2>
+        <p>
+            {{ ducky.get_sex_display }} ·
+            {{ stage.name|default:'Sin etapa' }}
+        </p>
+
+        <p class="muted">
+            El género queda fijado al crear el Ducky
+            según las reglas del backend.
+        </p>
+    </div>
+
+    <div class="dark-panel">
+        <h2>Ficha del héroe</h2>
+
+        <div class="fact">
+            <span>Nivel</span>
+            <b>{{ profile.current_level|default:1 }}</b>
+        </div>
+
+        <div class="fact">
+            <span>XP histórica</span>
+            <b>{{ profile.historical_xp_total|default:0 }}</b>
+        </div>
+
+        <div class="fact">
+            <span>Etapa</span>
+            <b>{{ stage.name|default:'Sin etapa' }}</b>
+        </div>
+
+        <div class="fact">
+            <span>Especialización</span>
+            <b>{{ profile.active_specialization_code|default:'Sin elegir' }}</b>
+        </div>
+
+        <div class="fact">
+            <span>Vestimenta</span>
+            <b>{{ ducky.selected_outfit.name|default:'Sin seleccionar' }}</b>
+        </div>
+
+        <a class="btn gold" href="{% url 'team5_ui:wardrobe' %}">
+            Ver vestuario
+        </a>
+    </div>
+
+</section>
+
+{% elif section == 'evolution' or section == 'museum' %}
+
+<div class="dark-panel">
+    <h2>🏛️ Las siete épocas</h2>
+
+    <div class="epoch-grid">
+
+        {% for s in stages %}
+
+        <div class="epoch-card {% if stage and stage.ordinal >= s.ordinal %}unlocked{% endif %} {% if stage and stage.code == s.code %}current{% endif %}">
+
+            <div class="epoch-icon">
+                {% if s.ordinal == 1 %}
+                    🦣
+                {% elif s.ordinal == 2 %}
+                    🏺
+                {% elif s.ordinal == 3 %}
+                    🏛️
+                {% elif s.ordinal == 4 %}
+                    🏰
+                {% elif s.ordinal == 5 %}
+                    🎨
+                {% elif s.ordinal == 6 %}
+                    ⚙️
+                {% else %}
+                    🏙️
+                {% endif %}
+            </div>
+
+            <h3>{{ s.name }}</h3>
+            <small>{{ s.minimum_xp }} XP</small>
+
+            <p>
+                {% if stage and stage.ordinal >= s.ordinal %}
+                    ✓ Desbloqueada
+                {% else %}
+                    🔒 Bloqueada
+                {% endif %}
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+<div class="dark-panel">
+    <h2>⭐ Progreso de nivel</h2>
+
+    <p>
+        Nivel {{ profile.current_level|default:1 }}
+        · {{ profile.historical_xp_total|default:0 }} XP
+    </p>
+
+    <div class="progress">
+        <i style="width:{% if next_xp and profile %}{% widthratio profile.historical_xp_total next_xp 100 %}{% else %}100{% endif %}%"></i>
+    </div>
+
+    <p class="muted">
+        Las épocas se desbloquean mediante las reglas
+        de progresión de Ecomotor.
+        No se fuerza directamente la etapa.
+    </p>
+</div>
+
+{% if section == 'museum' %}
+
+<div class="dark-panel">
+    <h2>🖼️ Galería de vestimentas históricas</h2>
+
+    <p>
+        Las ilustraciones están asociadas a los artículos reales
+        de Duckies y utilizan la variante visual del personaje.
+    </p>
+
+    <div class="catalog-grid">
+
+        {% for outfit in outfits %}
+
+        <div class="product-card">
+            <div class="product-art">
+                <img src="{{ outfit.image_url }}" alt="Vestimenta {{ outfit.stage.name }}" loading="lazy">
+            </div>
+
+            <h3>{{ outfit.stage.name }}</h3>
+
+            <span class="tag">
+                {% if outfit.allowed %}
+                    Disponible
+                {% else %}
+                    Bloqueada
+                {% endif %}
+            </span>
+
+            <p>{{ outfit.item.name }}</p>
+        </div>
+
+        {% empty %}
+
+        <p>
+            El catálogo de vestimentas todavía no está inicializado.
+        </p>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endif %}
+
+{% elif section == 'specialization' %}
+
+<div class="dark-panel">
+    <h2>✦ Elige tu camino</h2>
+
+    <p>
+        La primera elección y los cambios posteriores
+        utilizan los servicios de Ecomotor y Duckies.
+    </p>
+
+    <div class="spec-grid">
+
+        {% for spec in specializations %}
+
+        <div class="spec-card {% if profile.active_specialization_code == spec.code %}chosen{% endif %}">
+
+            <div class="spec-icon">
+                {% if spec.code == 'DEVELOPER' %}
+                    💻
+                {% elif spec.code == 'GAMER' %}
+                    🎮
+                {% elif spec.code == 'CIBER' %}
+                    🛡️
+                {% elif spec.code == 'SISTEMAS' %}
+                    🖥️
+                {% else %}
+                    🧠
+                {% endif %}
+            </div>
+
+            <h3>{{ spec.name }}</h3>
+
+            <form method="post" action="{% url 'team5_ui:action' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="specialization">
+                <input type="hidden" name="return_to" value="specialization">
+                <input type="hidden" name="code" value="{{ spec.code }}">
+
+                <button
+                    type="submit"
+                    class="btn {% if profile.active_specialization_code == spec.code %}navy{% else %}gold{% endif %}"
+                    {% if profile.active_specialization_code == spec.code %}disabled{% endif %}
+                >
+                    {% if profile.active_specialization_code == spec.code %}
+                        Actual
+                    {% else %}
+                        Elegir
+                    {% endif %}
+                </button>
+
+            </form>
+        </div>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+{% elif section == 'wardrobe' %}
+
+<section class="content-grid wardrobe-layout">
+
+    <div class="dark-panel character-panel">
+        <h2>👑 Tu apariencia actual</h2>
+
+        <img class="character-large" src="{{ ducky_image }}" alt="Ducky con su vestimenta activa">
+
+        <p>
+            <b>
+                {{ ducky.selected_outfit.name|default:'Sin vestimenta seleccionada' }}
+            </b>
+        </p>
+
+        <span class="tag">
+            {{ ducky.get_sex_display }}
+        </span>
+
+        <p class="muted">
+            El personaje cambia al seleccionar una vestimenta autorizada.
+        </p>
+    </div>
+
+    <div class="dark-panel">
+        <h2>🏛️ Colección histórica</h2>
+
+        <p class="muted">
+            Una vestimenta por época, en la variante visual de tu Ducky.
+        </p>
+
+        <div class="catalog-grid wardrobe-catalog">
+
+            {% for outfit in outfits %}
+
+            <form
+                method="post"
+                action="{% url 'team5_ui:action' %}"
+                class="product-card outfit-card {% if ducky.selected_outfit_id == outfit.item.pk %}is-equipped{% endif %}"
+            >
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="outfit">
+                <input type="hidden" name="return_to" value="wardrobe">
+                <input type="hidden" name="item_id" value="{{ outfit.item.pk }}">
+
+                <div class="product-art">
+                    <img src="{{ outfit.image_url }}" alt="{{ outfit.item.name }}" loading="lazy">
+                </div>
+
+                <h3>{{ outfit.stage.name }}</h3>
+                <p>{{ outfit.item.name }}</p>
+
+                <span class="tag">
+                    {% if ducky.selected_outfit_id == outfit.item.pk %}
+                        Equipada
+                    {% elif outfit.allowed %}
+                        Disponible
+                    {% else %}
+                        Bloqueada
+                    {% endif %}
+                </span>
+
+                <button
+                    class="btn navy"
+                    type="submit"
+                    {% if not outfit.allowed or ducky.selected_outfit_id == outfit.item.pk %}disabled{% endif %}
+                >
+                    {% if ducky.selected_outfit_id == outfit.item.pk %}
+                        En uso
+                    {% else %}
+                        Vestir
+                    {% endif %}
+                </button>
+            </form>
+
+            {% empty %}
+
+            <p>Catálogo histórico pendiente de inicializar.</p>
+
+            {% endfor %}
+
+        </div>
+
+        <h2>✨ Vestimentas de especialización</h2>
+
+        <p class="muted">
+            Solo es equipable la vestimenta de la especialización activa.
+        </p>
+
+        <div class="catalog-grid wardrobe-catalog">
+
+            {% for outfit in spec_outfits %}
+
+            <form
+                method="post"
+                action="{% url 'team5_ui:action' %}"
+                class="product-card outfit-card {% if ducky.selected_outfit_id == outfit.item.pk %}is-equipped{% endif %}"
+            >
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="outfit">
+                <input type="hidden" name="return_to" value="wardrobe">
+                <input type="hidden" name="item_id" value="{{ outfit.item.pk }}">
+
+                <div class="product-art">
+                    <img src="{{ outfit.image_url }}" alt="{{ outfit.item.name }}" loading="lazy">
+                </div>
+
+                <h3>{{ outfit.specialization.name }}</h3>
+                <p>{{ outfit.item.name }}</p>
+
+                <span class="tag">
+                    {% if ducky.selected_outfit_id == outfit.item.pk %}
+                        Equipada
+                    {% elif outfit.allowed %}
+                        Disponible
+                    {% else %}
+                        No activa
+                    {% endif %}
+                </span>
+
+                <button
+                    class="btn navy"
+                    type="submit"
+                    {% if not outfit.allowed or ducky.selected_outfit_id == outfit.item.pk %}disabled{% endif %}
+                >
+                    {% if ducky.selected_outfit_id == outfit.item.pk %}
+                        En uso
+                    {% else %}
+                        Vestir
+                    {% endif %}
+                </button>
+
+            </form>
+
+            {% empty %}
+
+            <p>Catálogo de especializaciones pendiente de inicializar.</p>
+
+            {% endfor %}
+
+        </div>
+    </div>
+
+</section>
+
+{% elif section == 'inventory' %}
+
+<div class="dark-panel">
+    <h2>🎒 Mis objetos</h2>
+
+    <div class="catalog-grid">
+
+        {% for entry in inventory %}
+
+        <div class="product-card">
+
+            <div class="product-art">
+
+                {% if entry.image_url %}
+
+                    <img src="{{ entry.image_url }}" alt="{{ entry.item.name }}" loading="lazy">
+
+                {% else %}
+
+                    {% if entry.item.category == 'ATTACK' %}
+                        ⚔️
+                    {% elif entry.item.category == 'DEFENSE' %}
+                        🛡️
+                    {% elif entry.item.category == 'COSMETIC' %}
+                        👕
+                    {% else %}
+                        🎒
+                    {% endif %}
+
+                {% endif %}
+
+            </div>
+
+            <h3>{{ entry.item.name }}</h3>
+
+            <p>
+                {{ entry.item.category }}
+                · x{{ entry.quantity }}
+
+                {% if entry.item_level %}
+                    · Nv. {{ entry.item_level.level }}
+                {% endif %}
+            </p>
+
+            {% if entry.item.slot %}
+
+            <form method="post" action="{% url 'team5_ui:action' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="equip">
+                <input type="hidden" name="return_to" value="inventory">
+                <input type="hidden" name="item_id" value="{{ entry.item_id }}">
+                <input type="hidden" name="code" value="{{ entry.item_level_id|default:'' }}">
+
+                <button class="btn gold" type="submit">
+                    Equipar
+                </button>
+            </form>
+
+            {% else %}
+
+            <span class="tag">
+                {% if entry.item.consumable %}
+                    Consumible · uso en Arena pendiente
+                {% else %}
+                    Sin ranura equipable
+                {% endif %}
+            </span>
+
+            {% endif %}
+
+        </div>
+
+        {% empty %}
+
+        <div class="empty">
+            Tu inventario está vacío.
+            <a href="{% url 'shop:catalog' %}">Visita la tienda.</a>
+        </div>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+<div class="dark-panel">
+    <h2>📜 Últimas entregas de objetos (ItemGrant)</h2>
+
+    <p>
+        Incluye compras y entregas registradas en Duckies.
+        Las recompensas del laboratorio aislado no aparecen aquí.
+    </p>
+
+    <div class="ledger">
+
+        {% for grant in item_grants %}
+
+        <div class="fact">
+            <span>
+                {{ grant.item.name }}
+                · {{ grant.reference_type|default:'Entrega' }}
+
+                <small>
+                    {{ grant.created_at|date:'d/m/Y H:i' }}
+                </small>
+            </span>
+
+            <b>+{{ grant.quantity }}</b>
+        </div>
+
+        {% empty %}
+
+        <p>Aún no hay entregas registradas.</p>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+{% elif section == 'shop' %}
+
+<div class="dark-panel">
+
+    <div class="panel-heading">
+        <h2>🛒 DuckyShop</h2>
+
+        <span class="balance">
+            🪙 {{ wallet.available_balance|default:0 }} DC
+        </span>
+    </div>
+
+    <p>
+        Explora los artículos disponibles en la tienda oficial
+        de DuckyArena.
+    </p>
+
+    <p>
+        Las compras se gestionan mediante Shop y Bank.
+        Los objetos adquiridos se entregan al inventario
+        de tu Ducky.
+    </p>
+
+    <a class="btn gold" href="{% url 'shop:catalog' %}">
+        Ir al catálogo oficial
+    </a>
+
+    <a class="btn navy" href="{% url 'shop:purchase-history' %}">
+        Mis compras
+    </a>
+
+</div>
+
+{% elif section == 'wallet' %}
+
+<section class="content-grid">
+
+    <div class="parchment bank-card">
+        <div class="eyebrow">BANCO DE DUCKYARENA</div>
+
+        <h2>Saldo actual</h2>
+
+        <div class="coin-balance">
+            🪙 {{ wallet.available_balance|default:0 }}
+        </div>
+
+        <p>
+            El saldo y los movimientos proceden de Bank.
+            Las monedas de prueba solo pueden concederse
+            desde las herramientas autorizadas del entorno local.
+        </p>
+    </div>
+
+    <div class="dark-panel">
+        <h2>📜 Historial de movimientos</h2>
+
+        <div class="ledger">
+
+            {% for tx in transactions %}
+
+            <div class="fact">
+                <span>
+                    {{ tx.get_transaction_type_display }}
+
+                    <small>
+                        {{ tx.created_at|date:'d/m/Y H:i' }}
+                    </small>
+                </span>
+
+                <b class="{% if tx.amount > 0 %}positive{% else %}negative{% endif %}">
+                    {{ tx.amount }}
+                </b>
+            </div>
+
+            {% empty %}
+
+            <p>Aún no hay movimientos.</p>
+
+            {% endfor %}
+
+        </div>
+
+        <h3>Últimas compras</h3>
+
+        {% for p in purchases %}
+
+        <div class="fact">
+            <span>{{ p.shop_item.name }}</span>
+            <b>-{{ p.total_price_coins }}</b>
+        </div>
+
+        {% empty %}
+
+        <p class="muted">Sin compras todavía.</p>
+
+        {% endfor %}
+
+        <a class="btn navy" href="{% url 'shop:purchase-history' %}">
+            Ver historial de compras
+        </a>
+    </div>
+
+</section>
+
+{% elif section == 'arena' %}
+<section class="arena-hub" aria-labelledby="arena-heading">
+  <div class="arena-hub-heading">
+    <span class="arena-kicker">DUCKYARENA · CENTRO DE JUEGOS</span>
+    <h2 id="arena-heading">Elige tu desafío</h2>
+    <p>Cuatro formas de jugar, una sola aventura. Elige tu próximo reto.</p>
+  </div>
+  <div class="arena-game-grid">
+    <a class="arena-game-card training-card" href="{% url 'training_frontend' %}" aria-label="Entrar al modo Training">
+      <span class="arena-card-tag ready">DISPONIBLE</span>
+      <span class="arena-card-art" aria-hidden="true"><span class="arena-card-art-symbol">🎯</span><span class="arena-card-art-glow"></span></span>
+      <span class="arena-card-category">ENTRENAMIENTO</span>
+      <h3>Training</h3>
+      <p>Practica con ejercicios interactivos, supera desafíos y consigue recompensas para tu Ducky.</p>
+      <span class="arena-card-action">Entrar a Training <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="arena-game-card quiz-card" href="{% url 'quizzes:quiz_list' %}" aria-label="Entrar al modo Quiz">
+      <span class="arena-card-tag ready">DISPONIBLE</span>
+      <span class="arena-card-art" aria-hidden="true"><span class="arena-card-art-symbol">🧠</span><span class="arena-card-art-glow"></span></span>
+      <span class="arena-card-category">CONOCIMIENTOS</span>
+      <h3>Quiz</h3>
+      <p>Pon a prueba tus conocimientos con preguntas y desafíos de ingenio.</p>
+      <span class="arena-card-action">Entrar a Quiz <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="arena-game-card escape-card" href="{% url 'escape_arenas:game' %}" aria-label="Entrar al modo Escape">
+      <span class="arena-card-tag ready">DISPONIBLE</span>
+      <span class="arena-card-art" aria-hidden="true"><span class="arena-card-art-symbol">🗝️</span><span class="arena-card-art-glow"></span></span>
+      <span class="arena-card-category">AVENTURA</span>
+      <h3>Escape</h3>
+      <p>Descifra pistas, resuelve enigmas y encuentra la salida antes de que sea tarde.</p>
+      <span class="arena-card-action">Entrar a Escape <span aria-hidden="true">→</span></span>
+    </a>
+    <div class="arena-game-card clash-card arena-game-unavailable" aria-disabled="true">
+      <span class="arena-card-tag">PRÓXIMAMENTE</span>
+      <span class="arena-card-art" aria-hidden="true"><span class="arena-card-art-symbol">⚔️</span><span class="arena-card-art-glow"></span></span>
+      <span class="arena-card-category">COMPETICIÓN</span>
+      <h3>Clash</h3>
+      <p>Prepárate para los enfrentamientos y demuestra las habilidades de tu Ducky.</p>
+      <span class="arena-card-action muted">En preparación</span>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endif %}
+
+{% endif %}
+
+{% if ducky and demo_enabled %}
+
+<aside class="test-tools">
+    <details>
+        <summary>
+            🧪 Laboratorio de pruebas
+            <span>XP · Ducky Coins · HINT</span>
+        </summary>
+
+        <div class="tools-inner">
+
+            <p>
+                Operaciones registradas disponibles únicamente
+                en el entorno local autorizado.
+                Estas herramientas son independientes del
+                laboratorio persistente de Rewards.
+            </p>
+
+            <form method="post" action="{% url 'team5_demo:action' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="xp">
+                <input type="hidden" name="return_to" value="{{ section }}">
+
+                <label>XP histórica</label>
+
+                <input type="number" name="amount" min="1" max="1000000" value="500">
+
+                <button class="btn navy" type="submit">
+                    ＋ Añadir XP
+                </button>
+            </form>
+
+            <form method="post" action="{% url 'team5_demo:action' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="coins">
+                <input type="hidden" name="return_to" value="{{ section }}">
+
+                <label>Ducky Coins</label>
+
+                <input type="number" name="amount" min="1" max="1000000" value="500">
+
+                <button class="btn gold" type="submit">
+                    ＋ Añadir monedas
+                </button>
+            </form>
+
+            <form method="post" action="{% url 'team5_demo:action' %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="action" value="hint">
+                <input type="hidden" name="return_to" value="inventory">
+
+                <button class="btn navy" type="submit">
+                    ＋ Entregar 1 HINT de prueba
+                </button>
+            </form>
+
+            <small>
+                Las entregas manuales de HINT utilizan los servicios
+                de Duckies y no invocan Rewards.
+                No validan el recorrido HINT del laboratorio
+                persistente de Ecomotor.
+            </small>
+
+            <small>
+                El cambio de época depende de XP y de las reglas
+                oficiales de Ecomotor.
+            </small>
+
+        </div>
+    </details>
+</aside>
+
+{% endif %}
+
+{% endblock %}

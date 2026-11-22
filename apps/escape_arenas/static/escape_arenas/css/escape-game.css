@@ -1,0 +1,11 @@
+#puzzle-modal{padding:12px;box-sizing:border-box;backdrop-filter:blur(5px)}
+#puzzle-modal>div{font-family:Georgia,serif!important;box-shadow:inset 0 0 0 3px #b88a50,inset 0 0 35px #97602d44,0 24px 80px #000b!important}
+#puzzle-modal button{cursor:pointer;border-radius:7px;padding:10px 14px;font-weight:700}
+#puzzle-modal .escape-mechanism{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px}
+#puzzle-modal .escape-mechanism-info{flex-basis:100%;background:#d8b77c85;border:1px solid #9e774b;color:#513820;padding:12px;border-radius:6px;margin:0;font:600 15px/1.5 system-ui,sans-serif}
+#puzzle-modal .escape-mechanism-choice{background:linear-gradient(#e6cb96,#cda36d);color:#382517;border:2px solid #9b7045;box-shadow:0 3px 0 #865c37;min-width:76px}
+#puzzle-modal .escape-mechanism-choice.active{background:#755036;color:#fff1d4}
+#puzzle-modal input{color:#392b1d!important;background:#fff2cf!important;border-color:#a47a4d!important}
+#puzzle-modal label{color:#392b1d!important}
+#puzzle-modal button:focus-visible{outline:3px solid #116d82;outline-offset:2px}
+@media(max-width:640px){#puzzle-modal>div{padding:18px!important;border-width:6px!important}#puzzle-modal button{padding:10px 8px}}

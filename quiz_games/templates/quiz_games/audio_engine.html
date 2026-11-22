@@ -1,0 +1,123 @@
+<div id="sound-control-container" class="position-fixed bottom-0 end-0 m-3 z-3" style="position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 9999;">
+  <button id="btn-toggle-sound" class="btn btn-sm btn-dark border-secondary rounded-pill shadow px-3 py-2 text-white" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 50px; padding: 0.45rem 0.95rem; color: #FFFFFF; font-family: var(--font-display, sans-serif); font-size: 0.85rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 0.4rem; backdrop-filter: blur(6px); transition: all 0.2s ease;" title="Activar/Silenciar sonido">
+    <span id="sound-icon">🔊</span> <small id="sound-text">Audio ON</small>
+  </button>
+</div>
+
+<script>
+class DuckyAudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.isMuted = localStorage.getItem('ducky_audio_muted') === 'true';
+    this.countdownInterval = null;
+    this.initUI();
+  }
+
+  initContext() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        this.ctx = new AudioContext();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  initUI() {
+    const btn = document.getElementById('btn-toggle-sound');
+    const icon = document.getElementById('sound-icon');
+    const text = document.getElementById('sound-text');
+    if (!btn) return;
+
+    const updateUI = () => {
+      if (icon) icon.textContent = this.isMuted ? '🔇' : '🔊';
+      if (text) text.textContent = this.isMuted ? 'Audio OFF' : 'Audio ON';
+    };
+    updateUI();
+
+    btn.addEventListener('click', () => {
+      this.initContext();
+      this.isMuted = !this.isMuted;
+      localStorage.setItem('ducky_audio_muted', this.isMuted);
+      updateUI();
+    });
+  }
+
+  playTone(freq, type, duration, delay = 0, gainVal = 0.15) {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+    const startTime = this.ctx.currentTime + delay;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+
+    gain.gain.setValueAtTime(gainVal, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }
+
+  playCorrect() {
+    // Brillo de acierto: arpegio ascendente brillante en Do Mayor
+    if (this.isMuted) return;
+    this.initContext();
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach((freq, idx) => {
+      this.playTone(freq, 'triangle', 0.18, idx * 0.07, 0.2);
+    });
+  }
+
+  playIncorrect() {
+    // Golpe sordo y disonancia de fallo
+    if (this.isMuted) return;
+    this.initContext();
+    this.playTone(220.00, 'sawtooth', 0.25, 0.0, 0.25); // A3
+    this.playTone(207.65, 'sawtooth', 0.35, 0.08, 0.25); // G#3 (disonancia)
+  }
+
+  playTensionCountdown(secondsRemaining) {
+    // Tic-tac de alta tensión: doble pulso rápido con frecuencia ascendente según se agota el tiempo
+    if (this.isMuted || secondsRemaining > 5 || secondsRemaining <= 0) return;
+    this.initContext();
+    
+    // La frecuencia base sube a medida que quedan menos segundos
+    const baseFreq = 800 + (5 - secondsRemaining) * 80;
+    
+    // Pulso 1
+    this.playTone(baseFreq, 'sine', 0.06, 0.0, 0.25);
+    // Pulso 2 (estilo latido cardíaco acelerado)
+    this.playTone(baseFreq * 1.25, 'sine', 0.08, 0.12, 0.3);
+  }
+
+  playVictoryOrchestration() {
+    // Fanfarria polifónica triunfal para podio
+    if (this.isMuted) return;
+    this.initContext();
+
+    const chord1 = [523.25, 659.25, 783.99]; // C Mayor
+    const chord2 = [587.33, 739.99, 880.00]; // D Mayor
+    const chord3 = [659.25, 830.61, 987.77]; // E Mayor
+    const finalChord = [783.99, 987.77, 1174.66, 1567.98]; // Sol Mayor triunfal
+
+    const playChord = (chord, delay, duration) => {
+      chord.forEach(f => this.playTone(f, 'triangle', duration, delay, 0.12));
+    };
+
+    playChord(chord1, 0.0, 0.2);
+    playChord(chord2, 0.25, 0.2);
+    playChord(chord3, 0.5, 0.25);
+    playChord(finalChord, 0.8, 1.2);
+  }
+}
+
+window.duckyAudio = new DuckyAudioEngine();
+</script>

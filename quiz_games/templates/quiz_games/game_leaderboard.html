@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% load static avatar_tags %}
+
+{% block title %}Clasificación General — {{ quiz.title }} — QuizArenas{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-container {
+        max-width: 1000px;
+        margin: 0 auto 3rem;
+    }
+
+    /* Header Strip */
+    .leaderboard-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .leaderboard-title {
+        font-family: var(--font-display);
+        font-size: 2.2rem;
+        font-weight: 900;
+        color: var(--text-heading);
+        margin-bottom: 0.5rem;
+    }
+
+    .leaderboard-subtitle {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        font-weight: 500;
+    }
+
+    /* Global Stats Row */
+    .global-stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2.25rem;
+    }
+
+    .stat-display-box {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-display-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-edge-yellow::before { background: var(--kahoot-yellow); }
+    .stat-edge-blue::before { background: var(--kahoot-blue); }
+    .stat-edge-purple::before { background: var(--kahoot-purple); }
+
+    .stat-box-label {
+        font-family: var(--font-display);
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.4rem;
+    }
+
+    .stat-box-number {
+        font-family: var(--font-display);
+        font-size: 1.85rem;
+        font-weight: 900;
+        color: var(--text-heading);
+    }
+
+    /* Main Table Card */
+    .ranking-table-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        margin-bottom: 2.25rem;
+    }
+
+    .table-card-header {
+        padding: 1.25rem 1.75rem;
+        border-bottom: 1px solid var(--border-subtle);
+        background: var(--bg-surface-secondary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-card-title {
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: var(--text-heading);
+        margin: 0;
+    }
+
+    .ranking-table-styled {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .ranking-table-styled th {
+        background: var(--bg-surface-secondary);
+        padding: 1rem 1.5rem;
+        font-family: var(--font-display);
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .ranking-table-styled td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 0.95rem;
+        color: var(--text-body);
+    }
+
+    .ranking-table-styled tbody tr:hover {
+        background: #F8FAFC;
+    }
+
+    .pos-number-badge {
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 1rem;
+        color: var(--text-heading);
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #E2E8F0;
+    }
+
+    .pos-top-1 { background: #FEF3C7; color: #B45309; }
+    .pos-top-2 { background: #F1F5F9; color: #475569; }
+    .pos-top-3 { background: #FFEDD5; color: #C2410C; }
+
+    .player-row-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .player-initial-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--kahoot-purple);
+        color: #FFFFFF;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 0.95rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .player-name-text {
+        font-weight: 700;
+        color: var(--text-heading);
+    }
+
+    .score-highlight {
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 1.05rem;
+        color: #B45309;
+    }
+
+    /* Actions Row */
+    .leaderboard-actions-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .global-stats-row {
+            grid-template-columns: 1fr;
+        }
+        .leaderboard-title {
+            font-size: 1.6rem;
+        }
+        .ranking-table-styled th,
+        .ranking-table-styled td {
+            padding: 0.85rem 1rem;
+        }
+        .leaderboard-actions-row {
+            flex-direction: column;
+            width: 100%;
+        }
+        .leaderboard-actions-row a {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="leaderboard-container">
+    <!-- Header -->
+    <div class="leaderboard-header">
+        <h1 class="leaderboard-title">📊 Clasificación General</h1>
+        <p class="leaderboard-subtitle">Partida finalizada — Cuestionario: <strong>{{ quiz.title }}</strong> (PIN: {{ game.code }})</p>
+    </div>
+
+    <!-- Global Session Metrics -->
+    <div class="global-stats-row">
+        <div class="stat-display-box stat-edge-yellow">
+            <div class="stat-box-label">🪙 DuckyCoins Máximas</div>
+            <div class="stat-box-number">{{ max_score }} DC</div>
+        </div>
+
+        <div class="stat-display-box stat-edge-blue">
+            <div class="stat-box-label">🎯 Promedio Aciertos</div>
+            <div class="stat-box-number">{{ avg_correct }} / {{ total_questions }}</div>
+        </div>
+
+        <div class="stat-display-box stat-edge-purple">
+            <div class="stat-box-label">👥 Participantes</div>
+            <div class="stat-box-number">{{ total_participants }}</div>
+        </div>
+    </div>
+
+    <!-- Full Participants Table -->
+    <div class="ranking-table-card">
+        <div class="table-card-header">
+            <h2 class="table-card-title">Tabla Completa de Posiciones</h2>
+            <span style="font-size: 0.88rem; color: var(--text-muted); font-weight: 600;">
+                {{ ranking|length }} participantes registrados
+            </span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="ranking-table-styled">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Posición</th>
+                        <th>Participante</th>
+                        <th>Aciertos</th>
+                        <th>Racha Máx.</th>
+                        <th>DuckyCoins Ganadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gp in ranking %}
+                        <tr>
+                            <td>
+                                <span class="pos-number-badge {% if forloop.counter == 1 %}pos-top-1{% elif forloop.counter == 2 %}pos-top-2{% elif forloop.counter == 3 %}pos-top-3{% endif %}">
+                                    {{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="player-row-wrap">
+                                    {% render_ducky_avatar gp size="42px" extra_class="leaderboard-duck-avatar" %}
+                                    <span class="player-name-text">{{ gp.player.username }}</span>
+                                </div>
+                            </td>
+                            <td><strong>{{ gp.correct_answers }}</strong> / {{ total_questions }}</td>
+                            <td>🔥 {{ gp.current_streak }}</td>
+                            <td class="score-highlight">🪙 {{ gp.score }} DC</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                No hubo participantes en esta partida.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Actions Row -->
+    <div class="leaderboard-actions-row">
+        <a href="{% url 'quiz_games:game_podium' game.code %}" class="btn-3d btn-3d-yellow" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+            🏆 Revelar Podio Olímpico
+        </a>
+
+        {% if is_host %}
+            <a href="{% url 'quiz_games:export_game_results_csv' game.code %}" class="btn-3d btn-3d-blue">
+                📥 Descargar Calificaciones (CSV)
+            </a>
+            <a href="{% url 'quizzes:quiz_detail' quiz.pk %}" class="btn-3d btn-3d-neutral">
+                🎮 Volver al Cuestionario
+            </a>
+        {% endif %}
+
+        <a href="{% url 'quizzes:quiz_list' %}" class="btn-3d btn-3d-neutral">
+            📚 Galería de Quizzes
+        </a>
+    </div>
+</div>
+{% endblock %}

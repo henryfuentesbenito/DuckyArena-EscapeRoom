@@ -1,0 +1,1 @@
+{% extends "escape_arenas/base.html" %}{% block escape_content %}<h1>Mis aventuras</h1><a href="{% url 'escape_arenas:room_create' %}">Crear aventura</a><ul>{% for room in rooms %}<li><a href="{% url 'escape_arenas:room_detail' room.slug %}">{{ room.name }}</a> <a href="{% url 'escape_arenas:room_update' room.slug %}">Editar</a></li>{% endfor %}</ul>{% endblock %}

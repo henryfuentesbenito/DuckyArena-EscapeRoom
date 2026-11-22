@@ -1,0 +1,25 @@
+"""Entorno aislado Team5. Nunca utilizar en producción ni como configuración oficial."""
+
+from .settings import *  # noqa
+
+DATABASES["default"]["NAME"] = BASE_DIR / "db_team5_local.sqlite3"
+
+INSTALLED_APPS = [
+    "devtools.team5_local.apps.Team5LocalConfig"
+    if app == "apps.duckies.apps.DuckiesConfig"
+    else app
+    for app in INSTALLED_APPS
+]
+
+INSTALLED_APPS += [
+    "devtools.team5_local.commands_app.Team5LocalCommandsConfig",
+]
+
+TEAM5_LOCAL_ISOLATED = True
+
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
+
+# Catálogo sintético, exclusivo del laboratorio local.
+TRAINING_DEMO_CONTENT = True

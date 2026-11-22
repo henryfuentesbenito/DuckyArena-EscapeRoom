@@ -1,0 +1,7 @@
+{% extends "team5_ui/base.html" %}
+{% load static %}
+{% block content %}<link rel="stylesheet" href="{% static 'shop/css/shop.css' %}">
+<section class="page-title"><div><div class="eyebrow">DUCKYARENA · EQUIPO 5</div><h1>🛒 DuckyShop</h1><p>Objetos oficiales · Compra segura con DukiCoins</p></div><a class="btn navy" href="{% url 'shop:purchase-history' %}">Mis compras</a></section>
+<section class="dark-panel"><div class="panel-heading"><h2>Catálogo de objetos</h2><span class="balance">🪙 {{ wallet.available_balance|default:0 }} DC</span></div>
+<div class="catalog-grid">{% for offer in shop_items %}<article class="product-card"><a href="{% url 'shop:detail' offer.code %}" aria-label="Ver {{ offer.name }}"><div class="product-art"><img src="{{ offer.image_url }}" alt="{{ offer.name }}" loading="lazy"></div><h3>{{ offer.name }}</h3></a><p>{{ offer.description|default:'Artículo de DuckyArena' }}</p>{% if offer.featured %}<span class="tag">Destacado</span>{% endif %}<div class="price">🪙 {{ offer.price_coins }}</div><p>Unidades por pack: {{ offer.included_quantity }}</p><a class="btn gold" href="{% url 'shop:detail' offer.code %}">Ver y comprar</a></article>{% empty %}<div class="empty">No hay ofertas disponibles. Comprueba que la inicialización local haya preparado el catálogo oficial.</div>{% endfor %}</div></section>
+{% endblock %}

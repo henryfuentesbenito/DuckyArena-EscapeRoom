@@ -1,0 +1,36 @@
+"""
+URL configuration for config project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from apps.portal import views as ui
+urlpatterns = [
+    path('admin/',admin.site.urls),
+    path('escape/', include('apps.escape_arenas.urls')),
+    path('arena/quiz/quizzes/', include('quizzes.urls')),
+    path('arena/quiz/games/', include('quiz_games.urls')),
+    path('api/training/', include('apps.training.urls')),
+    path('arena/training/', ui.training_frontend, name='training_frontend'),
+    path('arena/training/<path:subpath>', ui.training_frontend, name='training_frontend_subpath'),
+    path('accounts/login/',auth_views.LoginView.as_view(template_name='registration/login.html'),name='login'),
+    path('accounts/logout/',auth_views.LogoutView.as_view(),name='logout'),
+    path('accounts/register/',ui.register,name='register'),
+    path('duckies/',include('apps.duckies.urls')),
+    path('bank/',include('apps.bank.urls')),
+    path('shop/',include('apps.shop.urls')),
+    path('', include('apps.portal.urls')),
+]

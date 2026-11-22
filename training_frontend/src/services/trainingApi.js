@@ -1,0 +1,71 @@
+import {
+  clearTokens,
+  getAccessToken,
+  refreshAccessToken,
+} from './authApi'
+
+const team5Session = import.meta.env.VITE_TEAM5_SESSION_MODE === 'true'
+const csrfToken = () => decodeURIComponent(document.cookie.match(/(?:^|; )csrftoken=([^;]+)/)?.[1] || '')
+const API_BASE = import.meta.env.VITE_TRAINING_API_URL
+  || `${import.meta.env.VITE_API_BASE_URL || (team5Session ? '/api' : 'http://localhost:8000/api')}/training`
+
+async function request(path, options = {}) {
+  const send = (token) => {
+    const headers = new Headers(options.headers)
+    headers.set('Content-Type', 'application/json')
+    if (!team5Session && token) headers.set('Authorization', ['Bearer', token].join(' '))
+    if (team5Session && options.method && options.method !== 'GET') headers.set('X-CSRFToken', csrfToken())
+    return fetch(`${API_BASE}${path}`, { ...options, headers, credentials: team5Session ? 'same-origin' : 'omit' })
+  }
+
+  let response = await send(team5Session ? null : getAccessToken())
+  if (!team5Session && response.status === 401) {
+    const refreshedToken = await refreshAccessToken()
+    if (refreshedToken) {
+      response = await send(refreshedToken)
+    }
+    if (!team5Session && response.status === 401) {
+      clearTokens()
+    }
+  }
+
+  const data = await response.json()
+  if (!response.ok) {
+    throw new Error(data.message || data.detail || `Training request failed: ${response.status}`)
+  }
+  return data
+}
+
+export function getTrainingOverview() {
+  return request('/')
+}
+
+export function getTrainingProgress() {
+  return request('/progress/')
+}
+
+export function getTrainingHistory(limit = 20) {
+  return request(`/history/?limit=${limit}`)
+}
+
+export function submitTrainingAnswer(exerciseNumber, answer) {
+  return request(`/exercises/${exerciseNumber}/submit/`, {
+    method: 'POST',
+    body: JSON.stringify({ answer }),
+  })
+}
+
+export function getProvidedGames() {
+  return request('/provided-games/')
+}
+
+export function getProvidedGameChallenge(gameId, level) {
+  return request(`/provided-games/${gameId}/${level}/`)
+}
+
+export function submitProvidedGameAnswer(gameId, level, exerciseId, answer) {
+  return request(`/provided-games/${gameId}/${level}/`, {
+    method: 'POST',
+    body: JSON.stringify({ exercise_id: exerciseId, answer }),
+  })
+}

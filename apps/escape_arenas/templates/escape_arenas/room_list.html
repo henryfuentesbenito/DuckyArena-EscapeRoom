@@ -1,0 +1,43 @@
+{% extends 'escape_arenas/base.html' %}
+{% load static %}
+{% block escape_title %}Centro de misiones · DuckyEscape{% endblock %}
+{% block escape_content %}
+<div class="mission-center">
+  <div class="center-topline"><a href="{% url 'escape_arenas:game' %}" class="back-link">← Temáticas</a><span class="center-system">● SISTEMA DE MISIONES ACTIVO</span><a href="/arena/" class="back-link">← Arena</a></div>
+  <header class="center-heading"><div><span class="center-kicker">DUCKYESCAPE / {{ theme_label|upper }}</span><h1>Centro de misiones</h1><p>Selecciona una aventura, consulta sus reglas y comienza cuando estés preparado.</p></div><div class="center-emblem" aria-hidden="true">⚗</div></header>
+  <div class="center-counts"><span><strong>{{ rooms|length|stringformat:'02d' }}</strong> aventuras disponibles</span><span>⏳ Reloj controlado por el servidor</span><a href="{% url 'escape_arenas:history' %}">Mis partidas →</a></div>
+  {% if rooms|length > 1 %}
+  <form method="get" class="center-filters"><input type="hidden" name="theme" value="{{ theme }}"><label>Buscar <input type="search" name="q" value="{{ q }}" placeholder="Nombre de la aventura"></label><label>Dificultad <select name="difficulty"><option value="">Todas</option>{% for value,label in difficulties %}<option value="{{ value }}" {% if value == difficulty %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><button type="submit" class="center-secondary">Filtrar</button><a href="{% url 'escape_arenas:room_list' %}?theme={{ theme }}">Limpiar</a></form>
+  {% endif %}
+  {% if rooms %}
+  <div class="center-layout">
+    <aside class="center-mission-list" aria-label="Aventuras disponibles"><h2>AVENTURAS</h2>{% for room in rooms %}<button type="button" class="center-mission-choice{% if forloop.first %} is-selected{% endif %}" data-mission-choice="{{ room.slug }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"><span class="choice-number">{{ forloop.counter|stringformat:'02d' }}</span><span><strong>{{ room.name }}</strong><small>{{ room.get_difficulty_display }} · {{ room.estimated_duration }} min</small></span><span class="choice-arrow">›</span></button>{% endfor %}</aside>
+    <div class="center-mission-detail">
+      {% for room in rooms %}
+      <article class="center-adventure" data-mission-detail="{{ room.slug }}" {% if not forloop.first %}hidden{% endif %}>
+        <div class="center-art" role="img" aria-label="Escenario de la aventura prehistórica"><div class="art-overlay"><span>OPERACIÓN CRONOS · MISIÓN {{ forloop.counter|stringformat:'03d' }}</span><h2>{{ room.name }}</h2></div></div>
+        <div class="center-content"><span class="center-difficulty">{{ room.get_difficulty_display|upper }} · MISIÓN INDIVIDUAL</span><p class="center-description">{{ room.description }}</p>
+          <div class="center-metrics"><div><strong>{{ room.estimated_duration }}</strong><small>Minutos límite</small></div><div><strong>{{ room.escape_stats.stage_count|default:0 }}</strong><small>Desafíos</small></div><div><strong>{{ room.escape_stats.points|default:0 }}</strong><small>Puntos base</small></div><div><strong>+200</strong><small>Bonus temporal máximo</small></div></div>
+          <details class="center-rules" open><summary>Reglas de la misión</summary><ol><li>Resuelve los desafíos en orden y explora los mecanismos de cada sala.</li><li>El servidor controla el reloj: recargar no devuelve tiempo.</li><li>Las pistas descuentan puntos del desafío; los errores validados restan 5.</li><li>La puntuación pertenece únicamente a Escape: no concede XP ni DuckyCoins.</li><li>Puedes salir y volver a una partida activa; abandonarla es una acción distinta.</li></ol></details>
+          <form method="post" action="{% url 'escape_arenas:escape_start' room.slug %}" class="center-start">{% csrf_token %}<button type="submit" class="center-primary">{% if room.active_session %}↻ Reanudar aventura{% else %}▶ Iniciar aventura{% endif %}</button></form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}<div class="center-empty"><h2>No hay aventuras disponibles</h2><p>Prueba otra búsqueda o vuelve a las temáticas.</p><a href="{% url 'escape_arenas:game' %}">← Volver a temáticas</a></div>{% endif %}
+</div>
+<script>
+(function(){
+  const choices = Array.from(document.querySelectorAll('[data-mission-choice]'));
+  const details = Array.from(document.querySelectorAll('[data-mission-detail]'));
+  function choose(slug){
+    choices.forEach(b=>{const active=b.dataset.missionChoice===slug;b.classList.toggle('is-selected',active);b.setAttribute('aria-pressed',String(active));});
+    details.forEach(d=>{d.hidden=d.dataset.missionDetail!==slug;});
+  }
+  choices.forEach(b=>b.addEventListener('click',()=>choose(b.dataset.missionChoice)));
+  const requested=new URLSearchParams(location.search).get('mission');
+  if(requested && choices.some(b=>b.dataset.missionChoice===requested))choose(requested);
+})();
+</script>
+{% endblock %}
